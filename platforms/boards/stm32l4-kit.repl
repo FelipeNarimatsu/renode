@@ -1,0 +1,7 @@
+using "platforms/cpus/stm32l496.repl"
+
+gpioPortB:
+    12 -> radio@0 
+
+radio: Wireless.AT86RF233 @ spi1
+    -> gpioPortB@10

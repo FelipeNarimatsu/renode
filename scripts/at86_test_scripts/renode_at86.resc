@@ -1,0 +1,17 @@
+:name: renode_test
+
+mach create
+machine LoadPlatformDescription @platforms/boards/stm32l4-kit.repl
+
+$bin?=@/home/narimatsu/STM32CubeIDE/workspace_1.17.0/renode_at86/Debug/renode_at86.elf
+
+logLevel -1 usart1
+logLevel -1 sysbus.spi1.radio
+
+showAnalyzer usart1
+
+macro reset
+"""
+    sysbus LoadELF $bin
+"""
+runMacro $reset
