@@ -1,0 +1,36 @@
+:name: ping_pong
+
+using sysbus
+
+$bin_master?=@/home/narimatsu/Documents/renode_elfs/dissertacao/l4_at86_ping_pong_master.elf
+$bin_slave?=@//home/narimatsu/Documents/renode_elfs/dissertacao/l4_at86_ping_pong_slave.elf
+
+emulation CreateIEEE802_15_4Medium "radio_medium"
+
+mach add "board_vulkan"
+machine LoadPlatformDescription @platforms/boards/stm32l4-kit.repl
+logLevel -1 usart1
+logLevel -1 sysbus.spi1.radio
+showAnalyzer usart1
+
+macro reset_vulkan
+"""
+    sysbus LoadELF $bin_master
+"""
+runMacro $reset_vulkan
+
+connector Connect sysbus.spi1.radio radio_medium
+
+mach add "board_titus"
+mach set "board_titus"
+machine LoadPlatformDescription @platforms/boards/stm32l4-kit.repl
+logLevel -1 usart1
+logLevel -1 sysbus.spi1.radio
+showAnalyzer usart1
+macro reset_titus
+"""
+    sysbus LoadELF $bin_slave
+"""
+runMacro $reset_titus
+
+connector Connect sysbus.spi1.radio radio_medium

@@ -1,0 +1,8 @@
+using "platforms/cpus/stm32l496.repl"
+
+toggle_pin: Miscellaneous.LED @gpioPortB
+
+gpioPortB:
+    15 -> toggle_pin@0
+
+dummy: Mocks.DummySPISlave @ spi1

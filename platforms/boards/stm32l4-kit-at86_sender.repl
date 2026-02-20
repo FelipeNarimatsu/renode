@@ -1,0 +1,9 @@
+using "platforms/cpus/stm32l496_sender.repl"
+
+external_led_top_master_sender: Miscellaneous.LED @gpioPortB_sender
+
+gpioPortB_sender:
+    15 -> external_led_top_master_sender@0
+
+radio_sender: Wireless.AT86RF233 @ spi1_sender
+    -> gpioPortB_sender@10

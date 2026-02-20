@@ -1,0 +1,36 @@
+using sysbus
+
+$bin?=@/home/narimatsu/Documents/lmest/fw-sens-v3-full/sensor/Debug/sensor.elf
+
+emulation CreateIEEE802_15_4Medium "radio_medium"
+
+mach add "board_vulkan"
+machine LoadPlatformDescription @platforms/boards/stm32l4-kit_v2.repl
+
+logFile @/home/narimatsu/Documents/renode_git/renode_logs_dissertacao/output.log
+
+connector Connect sysbus.spi3.radio radio_medium
+
+logLevel -1 sysbus.spi3.radio
+logLevel -1 sysbus.adc1
+logLevel -1 sysbus.dma1
+
+macro reset_vulkan
+"""
+    sysbus LoadELF $bin
+"""
+runMacro $reset_vulkan
+
+mach add "board_dummy"
+mach set "board_dummy"
+machine LoadPlatformDescription @platforms/boards/stm32l4-kit_v2.repl
+sysbus.spi3.radio Channel 24
+
+connector Connect sysbus.spi3.radio radio_medium
+
+radio_medium SetPacketHookFromFile sysbus.spi3.radio @python/zigbee_packet_forward_request_empty.py
+
+mach set "board_vulkan"
+
+machine StartGdbServer 3333
+

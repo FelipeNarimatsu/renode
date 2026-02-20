@@ -1,5 +1,12 @@
-sram: Memory.MappedMemory @ sysbus 0x20000000
-    size: 0x00050000
+cpu: CPU.CortexM @ sysbus
+    cpuType: "cortex-m4"
+    nvic: nvic
+    PerformanceInMips: 8
+
+nvic: IRQControllers.NVIC @ sysbus 0xE000E000
+    priorityMask: 0xF0
+    systickFrequency: 8000000
+    IRQ -> cpu@0
 
 flash: Memory.MappedMemory @ sysbus 0x08000000
     size: 0x00100000
@@ -8,25 +15,34 @@ flash_controller: MTD.STM32L4_FlashController @ {
         sysbus 0x40022000;
         sysbus new Bus.BusMultiRegistration { 
             address: 0x1FFF7800; 
-            size: 0x0F; 
+            size: 0x0F;
             region: "optionBytes" }
     }
     flash: flash
 
-pwr: Miscellaneous.STM32L4_PWR @ sysbus 0x40007000
-    Voltage: 3.0
-    UseExternalSmps: false
+sram: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x00050000
 
-dbg: Miscellaneous.STM32L4_DBGMCU @ sysbus 0xE0042000
+uid: Memory.MappedMemory @ sysbus 0x1FFF7400
+    size: 0x400
 
-rtc: Timers.STM32L4_RTC @ sysbus 0x40002800
-    AlarmIRQ -> nvic@41
-    WakeupIRQ -> exti@20
-    
 rcc: Miscellaneous.STM32L4_RCC @ sysbus 0x40021000
     rtcPeripheral: rtc
 
+pwr: Miscellaneous.STM32L4_PWR @ sysbus 0x40007000
+
+rtc: Timers.STM32L4_RTC @ sysbus 0x40002800
+    AlarmIRQ -> nvic@41
+
+dbg: Miscellaneous.STM32L4_DBGMCU @ sysbus 0xE0042000
+
 syscfg: Miscellaneous.STM32L4_SYSCFG @ sysbus 0x40010000
+
+crc: CRC.STM32_CRC @ sysbus 0x40023000
+    series: STM32Series.L4
+    
+rng: Miscellaneous.STM32L4_RNG @ sysbus 0x50060800
+    -> nvic@80
 
 dma1: DMA.STM32L4_DMA @ sysbus 0x40020000
     [0-6] -> nvic@[11-17]
@@ -35,7 +51,7 @@ dma2: DMA.STM32L4_DMA @ sysbus 0x40020400
     [0-6] -> nvic@[56-60,68-69]
 
 exti: IRQControllers.STM32L4_EXTI @ sysbus 0x40010400
-    numberOfOutputLines: 40
+    numberOfOutputLines: 32
     [0-4] -> nvic@[6-10]
     [5-9] -> nvicInput23@[0-4]
     [10-15] -> nvicInput40@[0-5]
@@ -55,30 +71,25 @@ nvicInput40: Miscellaneous.CombinedInput @ none
     numberOfInputs: 6
     -> nvic@40
 
-i2c1: I2C.STM32L4_I2C @ sysbus 0x40005400
-    EventInterrupt -> nvic@31
-    ErrorInterrupt -> nvic@32
-
-rng: Miscellaneous.STM32L4_RNG @ sysbus 0x50060800
-    -> nvic@80
-
 usart1: UART.STM32L4_UART @ sysbus <0x40013800, +0x100>
+    frequency: 4000000
     -> nvic@37
 
 usart2: UART.STM32L4_UART @ sysbus <0x40004400, +0x100>
     -> nvic@38
 
-nvic: IRQControllers.NVIC @ sysbus 0xE000E000
-    priorityMask: 0xF0
-    systickFrequency: 8000000
-    IRQ -> cpu@0
+i2c1: I2C.STM32L4_I2C @ sysbus 0x40005400
+    EventInterrupt -> nvic@31
+    ErrorInterrupt -> nvic@32
 
-cpu: CPU.CortexM @ sysbus
-    cpuType: "cortex-m4"
-    nvic: nvic
+spi1: SPI.STM32L4_SPI @ sysbus 0x40013000
+    IRQ -> nvic@35    
 
-crc: CRC.STM32_CRC @ sysbus 0x40023000
-    series: STM32Series.L4
+spi2: SPI.STM32L4_SPI @ sysbus 0x40003800
+    IRQ -> nvic@36
+
+spi3: SPI.STM32L4_SPI @ sysbus 0x40003C00
+    IRQ -> nvic@51
 
 adc_common: Analog.STM32L4_ADC_Common @ sysbus 0x50040300
 
@@ -151,21 +162,11 @@ timer7: Timers.STM32L4_BasicTimer @ sysbus 0x40001400
     frequency: 8000000
     initialLimit: 0xFFFF
 
-spi1: SPI.STM32L4_SPI @ sysbus 0x40013000
-    IRQ -> nvic@35    
-
-spi2: SPI.STM32L4_SPI @ sysbus 0x40003800
-    IRQ -> nvic@36
-
-spi3: SPI.STM32L4_SPI @ sysbus 0x40003C00
-    IRQ -> nvic@51
-
-uid: Memory.MappedMemory @ sysbus 0x1FFF7400
-    size: 0x400
-
 sysbus:
     init:
         ApplySVD @platforms/svd/STM32L496.svd
-        # Required tags for STM32CubeMX-based projects (FLASH, USB)
+        Tag <0x48001000, 0x48001003> "GPIOE_MODER" 0xFFFFFFFF
+        Tag <0x48001004, 0x48001007> "GPIOE_OTYPER" 0x00000008
+
         Tag <0x40022010, 0x4002203F> "FLASH:RESET" 0x4000000
         Tag <0x50000010, 0x5000003F> "USB:RESET" 0x4000000

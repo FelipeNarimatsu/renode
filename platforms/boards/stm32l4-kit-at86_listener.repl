@@ -1,0 +1,9 @@
+using "platforms/cpus/stm32l496_listener.repl"
+
+external_led_top_master: Miscellaneous.LED @gpioPortB
+
+gpioPortB:
+    15 -> external_led_top_master@0
+
+radio_listener: Wireless.AT86RF233 @ spi1
+    -> gpioPortB@10

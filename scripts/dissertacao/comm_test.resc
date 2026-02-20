@@ -1,0 +1,18 @@
+:name: renode_test
+
+mach create
+machine LoadPlatformDescription @platforms/boards/stm32l4-kit-toggle.repl
+
+$bin?=@/home/narimatsu/STM32CubeIDE/renode_test_new/Debug/renode_test_new.elf
+        
+logLevel -1 gpioPortB.toggle_pin
+logLevel -1 sysbus.usart1
+logLevel -1 sysbus.spi1
+
+showAnalyzer usart1
+
+macro reset
+"""
+    sysbus LoadELF $bin
+"""
+runMacro $reset

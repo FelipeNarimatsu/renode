@@ -1,0 +1,161 @@
+sram_sender: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x00040000
+
+flash_sender: Memory.MappedMemory @ sysbus 0x08000000
+    size: 0x00100000
+    
+flash_controller_sender: MTD.STM32L4_FlashController @ {
+        sysbus 0x40022000;
+        sysbus new Bus.BusMultiRegistration { address: 0x1FFF7800; size: 0x100; region: "optionBytes" }
+    }
+    flash: flash_sender
+
+rcc_sender: Miscellaneous.STM32L4_RCC @ sysbus 0x40021000
+    rtcPeripheral: rtc_sender
+
+exti_sender: IRQControllers.STM32L4_EXTI @ sysbus 0x40010400
+    numberOfOutputLines: 32
+    [0-4] -> nvic_sender@[6-10]
+    [5-9] -> nvicInput23_sender@[0-4]
+    [10-15] -> nvicInput40_sender@[0-5]
+    [16, 17, 18, 22] -> nvic_sender@[1, 41, 42, 3]
+
+nvicInput23_sender: Miscellaneous.CombinedInput @ none
+    numberOfInputs: 5
+    -> nvic_sender@23
+
+nvicInput40_sender: Miscellaneous.CombinedInput @ none
+    numberOfInputs: 6
+    -> nvic_sender@40
+
+rtc_sender: Timers.STM32L4_RTC @ sysbus 0x40002800
+    AlarmIRQ -> nvic_sender@2
+
+i2c1_sender: I2C.STM32L4_I2C @ sysbus 0x40005400
+    EventInterrupt -> nvic_sender@31
+    ErrorInterrupt -> nvic_sender@32
+
+rng_sender: Miscellaneous.STM32L4_RNG @ sysbus 0x50060800
+    -> nvic_sender@80
+
+usart1_sender: UART.STM32L4_UART @ sysbus <0x40013800, +0x100>
+    frequency: 4000000
+    -> nvic_sender@37
+
+usart2_sender: UART.STM32L4_UART @ sysbus <0x40004400, +0x100>
+    -> nvic_sender@38
+
+nvic_sender: IRQControllers.NVIC @ sysbus 0xE000E000
+    priorityMask: 0xF0
+    systickFrequency: 16000000
+    IRQ -> cpu_sender@0
+
+cpu_sender: CPU.CortexM @ sysbus
+    cpuType: "cortex-m4"
+    nvic: nvic_sender
+
+crc_sender: CRC.STM32_CRC @ sysbus 0x40023000
+    series: STM32Series.L4
+
+gpioPortA_sender: GPIOPort.STM32_GPIOPort @ sysbus <0x48000000, +0x400>
+    modeResetValue: 0xFFFFFFFF
+    pullUpPullDownResetValue: 0x00000000
+    numberOfAFs: 16
+    [0-15] -> exti_sender@[0-15]
+
+gpioPortB_sender: GPIOPort.STM32_GPIOPort @ sysbus <0x48000400, +0x400>
+    modeResetValue: 0xFFFFFFFF
+    pullUpPullDownResetValue: 0x00000000
+    numberOfAFs: 16
+    [0-15] -> exti_sender@[0-15]
+
+gpioPortC_sender: GPIOPort.STM32_GPIOPort @ sysbus <0x48000800, +0x400>
+    modeResetValue: 0xFFFFFFFF
+    pullUpPullDownResetValue: 0x00000000
+    numberOfAFs: 16
+    [0-15] -> exti_sender@[0-15]
+
+gpioPortD_sender: GPIOPort.STM32_GPIOPort @ sysbus <0x48000C00, +0x400>
+    modeResetValue: 0xFFFFFFFF
+    pullUpPullDownResetValue: 0x00000000
+    numberOfAFs: 16
+    [0-15] -> exti_sender@[0-15]
+
+gpioPortE_sender: GPIOPort.STM32_GPIOPort @ sysbus <0x48001000, +0x400>
+    modeResetValue: 0xFFFFFFFF
+    pullUpPullDownResetValue: 0x00000000
+    numberOfAFs: 16
+    [0-15] -> exti_sender@[0-15]
+
+gpioPortF_sender: GPIOPort.STM32_GPIOPort @ sysbus <0x48001400, +0x400>
+    modeResetValue: 0xFFFFFFFF
+    pullUpPullDownResetValue: 0x00000000
+    numberOfAFs: 16
+    [0-15] -> exti_sender@[0-15]
+
+gpioPortG_sender: GPIOPort.STM32_GPIOPort @ sysbus <0x48001800, +0x400>
+    modeResetValue: 0xFFFFFFFF
+    pullUpPullDownResetValue: 0x00000000
+    numberOfAFs: 16
+    [0-15] -> exti_sender@[0-15]
+
+gpioPortH_sender: GPIOPort.STM32_GPIOPort @ sysbus <0x48001C00, +0x400>
+    modeResetValue: 0xFFFFFFFF
+    pullUpPullDownResetValue: 0x00000000
+    numberOfAFs: 16
+    [0-15] -> exti_sender@[0-15]
+
+timer1_sender: Timers.STM32_Timer @ sysbus 0x40012C00
+    -> nvic_sender@25
+    frequency: 16000000
+    initialLimit: 0xFFFF
+
+timer2_sender: Timers.STM32_Timer @ sysbus 0x40000000
+    -> nvic_sender@28
+    frequency: 16000000
+    initialLimit: 0xFFFFFFFF
+
+timer3_sender: Timers.STM32_Timer @ sysbus 0x40000400
+    -> nvic_sender@29
+    frequency: 16000000
+    initialLimit: 0xFFFF
+
+timer6_sender: Timers.STM32_Timer @ sysbus 0x40001000
+    -> nvic_sender@54
+    frequency: 16000000
+    initialLimit: 0xFFFF
+
+timer7_sender: Timers.STM32_Timer @ sysbus 0x40001400
+    -> nvic_sender@55
+    frequency: 16000000
+    initialLimit: 0xFFFF
+
+timer15_sender: Timers.STM32_Timer @ sysbus 0x40014000
+    -> nvic_sender@24
+    frequency: 16000000
+    initialLimit: 0xFFFF
+
+timer16_sender: Timers.STM32_Timer @ sysbus 0x40014400
+    -> nvic_sender@25
+    frequency: 16000000
+    initialLimit: 0xFFFF
+
+spi1_sender: SPI.STM32L4_SPI @ sysbus 0x40013000
+    IRQ -> nvic_sender@35    
+
+spi2_sender: SPI.STM32L4_SPI @ sysbus 0x40003800
+    IRQ -> nvic_sender@36
+
+spi3_sender: SPI.STM32L4_SPI @ sysbus 0x40003C00
+    IRQ -> nvic_sender@51
+
+sysbus:
+    init:
+        ApplySVD @platforms/svd/STM32L496.svd
+        # Example GPIOE tagging — adjust range and content as needed
+        Tag <0x48001000, 0x48001003> "GPIOE_MODER" 0xFFFFFFFF
+        Tag <0x48001004, 0x48001007> "GPIOE_OTYPER" 0x00000008
+
+        # Required tags for STM32CubeMX-based projects (FLASH, USB)
+        Tag <0x40022010, 0x4002203F> "FLASH:RESET" 0x4000000
+        Tag <0x50000010, 0x5000003F> "USB:RESET" 0x4000000
